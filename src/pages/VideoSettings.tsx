@@ -27,7 +27,7 @@ const VideoSettings = () => {
   const [loadingTime, setLoadingTime] = useState(0);
 
   const videoUrl =
-    "https://fquantplus.oss-cn-qingdao.aliyuncs.com/text2video/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912025-08-05_145043_941.mp4";
+    "https://fquantplus.oss-cn-qingdao.aliyuncs.com/text2video/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912025-08-05_173048_429.mp4";
 
   const handleGenerateVideo = () => {
     if (!text.trim()) return;
