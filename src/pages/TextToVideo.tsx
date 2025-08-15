@@ -22,9 +22,21 @@ import {
   Play,
   Download,
   Share2,
+  X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+
+// 新增：定义上传图片的类型
+interface UploadedImage {
+  id: number;
+  name: string;
+  size: string;
+  type: string;
+  url: string;
+  uploadTime: string;
+  category: string;
+}
 
 const TextToVideo = () => {
   const navigate = useNavigate();
@@ -34,6 +46,10 @@ const TextToVideo = () => {
   const [showResult, setShowResult] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [generationTime, setGenerationTime] = useState(0);
+
+  // 新增：图片上传相关状态
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   const sidebarItems = [
     { icon: Home, label: "首页", path: "/video-creation" },
@@ -132,6 +148,55 @@ const TextToVideo = () => {
     document.body.removeChild(link);
   };
 
+  // 新增：处理图片上传
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+
+    setIsUploading(true);
+
+    // 模拟上传过程
+    setTimeout(() => {
+      const newImages: UploadedImage[] = files.map((file, index) => ({
+        id: Date.now() + index,
+        name: file.name,
+        size: formatFileSize(file.size),
+        type: file.type,
+        url: URL.createObjectURL(file),
+        uploadTime: new Date().toLocaleString(),
+        category: getCategoryFromType(file.type),
+      }));
+
+      setUploadedImages((prev) => [...prev, ...newImages]);
+      setIsUploading(false);
+    }, 1000);
+  };
+
+  // 新增：格式化文件大小
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+
+  // 新增：根据文件类型获取分类
+  const getCategoryFromType = (type: string) => {
+    if (type.startsWith("image/")) {
+      if (type.includes("jpeg") || type.includes("jpg")) return "JPEG图片";
+      if (type.includes("png")) return "PNG图片";
+      if (type.includes("webp")) return "WebP图片";
+      return "图片文件";
+    }
+    return "其他文件";
+  };
+
+  // 新增：删除上传的图片
+  const handleRemoveImage = (imageId: number) => {
+    setUploadedImages((prev) => prev.filter((img) => img.id !== imageId));
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
       {/* Header */}
@@ -207,22 +272,55 @@ const TextToVideo = () => {
                   <h3 className="text-lg font-semibold text-gray-800">
                     上传素材
                   </h3>
+
+                  {/* 隐藏的文件输入 */}
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    id="image-upload"
+                  />
+
                   <div className="grid md:grid-cols-2 gap-4">
-                    <Card className="border-2 border-dashed border-blue-300 hover:border-blue-400 transition-colors">
-                      <CardContent className="p-8 text-center">
-                        <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-sm text-gray-600 mb-2">
-                          将音频WebP、JPEG
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          拖拽或点击上传到资源
-                        </p>
-                        <p className="text-xs text-gray-500">文件</p>
+                    <Card className="border-2 border-dashed border-blue-300 hover:border-blue-400 transition-colors cursor-pointer">
+                      <CardContent
+                        className="p-8 text-center"
+                        onClick={() =>
+                          document.getElementById("image-upload").click()
+                        }
+                      >
+                        {isUploading ? (
+                          <>
+                            <Loader2 className="w-12 h-12 text-blue-500 mx-auto mb-4 animate-spin" />
+                            <p className="text-sm text-blue-600 mb-2">
+                              正在上传中...
+                            </p>
+                            <p className="text-xs text-blue-500">请稍候</p>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                            <p className="text-sm text-gray-600 mb-2">
+                              将音频WebP、JPEG
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              拖拽或点击上传到资源
+                            </p>
+                            <p className="text-xs text-gray-500">文件</p>
+                          </>
+                        )}
                       </CardContent>
                     </Card>
 
-                    <Card className="border-2 border-dashed border-blue-300 hover:border-blue-400 transition-colors">
-                      <CardContent className="p-8 text-center">
+                    <Card className="border-2 border-dashed border-blue-300 hover:border-blue-400 transition-colors cursor-pointer">
+                      <CardContent
+                        className="p-8 text-center"
+                        onClick={() =>
+                          document.getElementById("image-upload").click()
+                        }
+                      >
                         <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                         <p className="text-sm text-gray-600 mb-2">
                           将音频WebP、JPEG
@@ -234,6 +332,55 @@ const TextToVideo = () => {
                       </CardContent>
                     </Card>
                   </div>
+
+                  {/* 上传的图片展示区域 */}
+                  {uploadedImages.length > 0 && (
+                    <div className="space-y-4">
+                      <h4 className="text-md font-medium text-gray-700">
+                        已上传的素材 ({uploadedImages.length})
+                      </h4>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {uploadedImages.map((image) => (
+                          <Card
+                            key={image.id}
+                            className="group hover:shadow-lg transition-shadow"
+                          >
+                            <div className="relative">
+                              <img
+                                src={image.url}
+                                alt={image.name}
+                                className="w-full h-32 object-cover rounded-t-lg"
+                              />
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                className="absolute top-2 right-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => handleRemoveImage(image.id)}
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
+                            </div>
+                            <CardContent className="p-3">
+                              <h5 className="font-medium text-sm truncate mb-1">
+                                {image.name}
+                              </h5>
+                              <div className="space-y-1">
+                                <p className="text-xs text-gray-500">
+                                  大小: {image.size}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  类型: {image.category}
+                                </p>
+                                <p className="text-xs text-gray-400">
+                                  上传: {image.uploadTime}
+                                </p>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Text Input Section */}
