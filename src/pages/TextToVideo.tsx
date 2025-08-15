@@ -125,7 +125,7 @@ const TextToVideo = () => {
   // 下载视频功能
   const handleDownload = () => {
     const link = document.createElement("a");
-    link.href = "src/assets/b6dc33281a0602806d537dc3f020fedd.mp4";
+    link.href = "/b6dc33281a0602806d537dc3f020fedd.mp4";
     link.download = "generated-video.mp4";
     document.body.appendChild(link);
     link.click();
@@ -471,7 +471,7 @@ const TextToVideo = () => {
                 loop
               >
                 <source
-                  src="src/assets/b6dc33281a0602806d537dc3f020fedd.mp4"
+                  src="/b6dc33281a0602806d537dc3f020fedd.mp4"
                   type="video/mp4"
                 />
                 您的浏览器不支持视频播放
